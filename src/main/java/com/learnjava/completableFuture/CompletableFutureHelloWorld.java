@@ -4,8 +4,7 @@ import com.learnjava.service.HelloWorldService;
 
 import java.util.concurrent.CompletableFuture;
 
-import static com.learnjava.util.CommonUtil.startTimer;
-import static com.learnjava.util.CommonUtil.timeTaken;
+import static com.learnjava.util.CommonUtil.*;
 import static com.learnjava.util.LoggerUtil.log;
 
 public class CompletableFutureHelloWorld {
@@ -37,6 +36,44 @@ public class CompletableFutureHelloWorld {
                 .join();
         timeTaken();
         return resultHelloWorldString;
+    }
+
+    public String threeAsyncCallsParallel() {
+        startTimer();
+        final CompletableFuture<String> helloFuture = CompletableFuture.supplyAsync(hws::hello);
+        final CompletableFuture<String> worldFuture = CompletableFuture.supplyAsync(hws::world);
+        final CompletableFuture<String> thirdFuture = CompletableFuture.supplyAsync(() -> {
+            delay(1000);
+            log("inside thirdMethod");
+            return " Hi from Prayag!";
+        });
+
+        // example of usage of .thenCombine()
+        // which we will use to combine two futures.
+        final String resultHelloWorldString = helloFuture
+                .thenCombine(worldFuture, (helloFutureResult, worldFutureResult) -> helloFutureResult + worldFutureResult)
+                .thenCombine(thirdFuture, (previousResult, currentResult) -> previousResult + currentResult)
+                .thenApply(String::toUpperCase)
+                .join();
+        timeTaken();
+        return resultHelloWorldString;
+    }
+
+    public String helloWorldThenCompose() {
+
+        startTimer();
+        final CompletableFuture<String> helloFuture = CompletableFuture.supplyAsync(hws::hello);
+
+        // .thenCompose() is used when one future is dependent on the result of other completableFuture
+        // like below helloFuture response is getting passed as input to worldFuture method and then used in
+        // returned completableFuture.
+        // Here latency will be added for both
+        final CompletableFuture<String> helloWorldFuture = helloFuture.thenCompose(hws::worldFuture)
+                .thenApply(String::toUpperCase);
+
+        final String finalResult = helloWorldFuture.join();
+        timeTaken();
+        return finalResult;
     }
 
 

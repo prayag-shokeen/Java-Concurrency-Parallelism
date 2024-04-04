@@ -25,4 +25,16 @@ public class CompletableFutureHelloWorldTest {
         // can see the time taken log to verify that both calls were parallel
         assertEquals("HELLO WORLD!", completableFutureHelloWorld.helloWorldMultipleAsyncCallsParallel());
     }
+
+    @Test
+    public void testHelloWorldThenCompose() {
+        // notice time taken here is around 2sec, because latency of both calls
+        // are getting added.
+        assertEquals("HELLO WORLD!", completableFutureHelloWorld.helloWorldThenCompose());
+    }
+
+    @Test
+    public void testThreeParallelCalls() {
+        assertEquals("HELLO WORLD! HI FROM PRAYAG!", completableFutureHelloWorld.threeAsyncCallsParallel());
+    }
 }
