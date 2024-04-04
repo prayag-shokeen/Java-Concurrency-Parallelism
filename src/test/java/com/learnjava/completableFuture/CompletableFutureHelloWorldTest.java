@@ -19,4 +19,10 @@ public class CompletableFutureHelloWorldTest {
             assertEquals("HELLO WORLD", response);
         }).join();
     }
+
+    @Test
+    public void testHelloWorldMultipleAsyncCallsParallel() {
+        // can see the time taken log to verify that both calls were parallel
+        assertEquals("HELLO WORLD!", completableFutureHelloWorld.helloWorldMultipleAsyncCallsParallel());
+    }
 }

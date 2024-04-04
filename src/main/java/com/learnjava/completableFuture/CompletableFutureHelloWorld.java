@@ -4,6 +4,8 @@ import com.learnjava.service.HelloWorldService;
 
 import java.util.concurrent.CompletableFuture;
 
+import static com.learnjava.util.CommonUtil.startTimer;
+import static com.learnjava.util.CommonUtil.timeTaken;
 import static com.learnjava.util.LoggerUtil.log;
 
 public class CompletableFutureHelloWorld {
@@ -14,11 +16,27 @@ public class CompletableFutureHelloWorld {
         this.hws = hws;
     }
 
-    // to add unit test created this method to return completable future.
     public CompletableFuture<String> helloWorld() {
         return CompletableFuture
                 .supplyAsync(hws::helloWorld)
                 .thenApply(String::toUpperCase);
+    }
+
+    // this method is called from test class.
+    // not making changes in main() to call this method, to maintain simplicity
+    public String helloWorldMultipleAsyncCallsParallel() {
+        startTimer();
+        final CompletableFuture<String> helloFuture = CompletableFuture.supplyAsync(hws::hello);
+        final CompletableFuture<String> worldFuture = CompletableFuture.supplyAsync(hws::world);
+
+        // example of usage of .thenCombine()
+        // which we will use to combine two futures.
+        final String resultHelloWorldString = helloFuture
+                .thenCombine(worldFuture, (helloFutureResult, worldFutureResult) -> helloFutureResult + worldFutureResult)
+                .thenApply(String::toUpperCase)
+                .join();
+        timeTaken();
+        return resultHelloWorldString;
     }
 
 
