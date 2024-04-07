@@ -28,7 +28,7 @@ public class ProductServiceWithInventoryUsingCompletableFuture {
 
         CompletableFuture<ProductInfo> productInfoCompletableFuture = CompletableFuture.supplyAsync(() -> productInfoService.retrieveProductInfo(productId))
                 .thenApply(productInfo -> {
-                    productInfo.setProductOptions(inventoryUpdatedProductOptionsWithParallelStream(productInfo));
+                    productInfo.setProductOptions(inventoryUpdatedProductOptionsWithCompletableFuture(productInfo));
                     return productInfo;
                 });
 
@@ -70,6 +70,35 @@ public class ProductServiceWithInventoryUsingCompletableFuture {
                 }).collect(Collectors.toList());
 
         return productOptionFutureList.stream().map(CompletableFuture::join).collect(Collectors.toList());
+    }
+
+    // if we have multiple completable futures to join, then we can use allOf to further improve latency
+    // as above method inventoryUpdatedProductOptionsWithCompletableFuture() has a list of CompletableFuture
+    // we can use allOf here.
+    // similarly we have anyOf also, which we can use if we want to return if any completable future gives response first.
+    // So the use case for anyOf can be if we can retrieve data from multiple dataSources like
+    //          1. DB
+    //          2. S3
+    //          3. API call
+    // and all dataSources returns the same result for given request, then we can use anyOf() to make
+    // our code fast whichever service returns the response first we will use the response and done.
+    private List<ProductOption> inventoryUpdatedProductOptionsWithCompletableFuture_AllOf(final ProductInfo productInfo) {
+        List<CompletableFuture<ProductOption>> productOptionFutureList =  productInfo.getProductOptions().stream()
+                .map(productOption -> {
+                    CompletableFuture<ProductOption> productOptionFuture = CompletableFuture
+                            .supplyAsync(() -> inventoryService.addInventory(productOption))
+                            .thenApply((inventory -> {
+                                productOption.setInventory(inventory);
+                                return productOption;
+                            }));
+                    return productOptionFuture;
+                }).collect(Collectors.toList());
+
+        var cfAllOf = CompletableFuture.allOf(productOptionFutureList.toArray(new CompletableFuture[productOptionFutureList.size()]));
+
+        return cfAllOf
+                .thenApply((v) -> productOptionFutureList.stream().map(CompletableFuture::join).collect(Collectors.toList()))
+                .join();
     }
 
     // async call using parallelStreams

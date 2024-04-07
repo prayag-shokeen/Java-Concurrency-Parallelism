@@ -37,4 +37,14 @@ public class CompletableFutureHelloWorldTest {
     public void testThreeParallelCalls() {
         assertEquals("HELLO WORLD! HI FROM PRAYAG!", completableFutureHelloWorld.threeAsyncCallsParallel());
     }
+
+    @Test
+    public void testThreeParallelCalls_WithAdditionalLogs() {
+        assertEquals("HELLO WORLD! HI FROM PRAYAG!", completableFutureHelloWorld.threeAsyncCallsParallel_WithAdditionalLogs());
+    }
+
+    @Test
+    public void testThreeAsyncCallsParallel_WithCustomThreadPool() {
+        assertEquals("HELLO WORLD! HI FROM PRAYAG!", completableFutureHelloWorld.threeAsyncCallsParallel_WithCustomThreadPool());
+    }
 }
